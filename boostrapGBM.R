@@ -86,24 +86,65 @@ bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli",
                                                                     type = "response"),
                                                             as.numeric(DaFr[[x]][[1]][, label])))
     eval_train <- sapply(output2, function(x) colAUC(x[,1],x[,2]))
-    rmse_train <- sapply(1:length(case.gbm), function(x) Metrics::rmse(actual = DaFr[[x]][[1]][, label], predicted = predict(case.gbm[[x]], newdata = DaFr[[x]][[1]], n.trees = best.iter[x], type = "response")))
-    output2 <- lapply(1:length(case.gbm), function(x) cbind(predict(case.gbm[[x]], newdata = DaFr[[x]][[2]], n.trees = best.iter[x], type = "response"), as.numeric(DaFr[[x]][[2]][, label])))
+    rmse_train <- sapply(1:length(case.gbm), function(x) Metrics::rmse(actual = DaFr[[x]][[1]][, label],
+                                                                       predicted = predict(case.gbm[[x]],
+                                                                                           newdata = DaFr[[x]][[1]],
+                                                                                           n.trees = best.iter[x],
+                                                                                           type = "response")))
+    output2 <- lapply(1:length(case.gbm), function(x) cbind(predict(case.gbm[[x]],
+                                                                    newdata = DaFr[[x]][[2]],
+                                                                    n.trees = best.iter[x],
+                                                                    type = "response"),
+                                                            as.numeric(DaFr[[x]][[2]][, label])))
     eval_test <- sapply(output2, function(x) colAUC(x[,1],x[,2]))
-    rmse_test <- sapply(1:length(case.gbm), function(x) Metrics::rmse(actual = DaFr[[x]][[2]][, label], predicted = predict(case.gbm[[x]], newdata = DaFr[[x]][[2]], n.trees = best.iter[x], type = "response")))
+    rmse_test <- sapply(1:length(case.gbm), function(x) Metrics::rmse(actual = DaFr[[x]][[2]][, label],
+                                                                      predicted = predict(case.gbm[[x]],
+                                                                                          newdata = DaFr[[x]][[2]],
+                                                                                          n.trees = best.iter[x],
+                                                                                          type = "response")))
   } else {
-    eval_train <- sapply(1:length(case.gbm), function(x) 1-sum((DaFr[[x]][[1]][, label] - predict(case.gbm[[x]], newdata=DaFr[[x]][[1]], n.trees=best.iter[x], type="response"))^2)/sum((DaFr[[x]][[1]][, label] - mean(DaFr[[x]][[1]][, label]))^2))
-    rmse_train <- sapply(1:length(case.gbm), function(x) Metrics::rmse(actual = DaFr[[x]][[1]][, label], predicted = predict(case.gbm[[x]], newdata = DaFr[[x]][[1]], n.trees = best.iter[x], type = "response")))
-    eval_test <- sapply(1:length(case.gbm), function(x) 1-sum((DaFr[[x]][[2]][, label] - predict(case.gbm[[x]], newdata=DaFr[[x]][[2]], n.trees =best.iter[x], type="response"))^2)/sum((DaFr[[x]][[2]][, label] - mean(DaFr[[x]][[2]][, label]))^2))
-    rmse_test <- sapply(1:length(case.gbm), function(x) Metrics::rmse(actual = DaFr[[x]][[2]][, label], predicted = predict(case.gbm[[x]], newdata = DaFr[[x]][[2]], n.trees = best.iter[x], type = "response")))
+    eval_train <- sapply(1:length(case.gbm), function(x) 1-sum((DaFr[[x]][[1]][, label] - predict(case.gbm[[x]],
+                                                                                                  newdata=DaFr[[x]][[1]],
+                                                                                                  n.trees=best.iter[x],
+                                                                                                  type="response"))^2)/sum((DaFr[[x]][[1]][, label] - mean(DaFr[[x]][[1]][, label]))^2))
+    rmse_train <- sapply(1:length(case.gbm), function(x) Metrics::rmse(actual = DaFr[[x]][[1]][, label],
+                                                                       predicted = predict(case.gbm[[x]],
+                                                                                           newdata = DaFr[[x]][[1]],
+                                                                                           n.trees = best.iter[x],
+                                                                                           type = "response")))
+    eval_test <- sapply(1:length(case.gbm), function(x) 1-sum((DaFr[[x]][[2]][, label] - predict(case.gbm[[x]],
+                                                                                                 newdata=DaFr[[x]][[2]],
+                                                                                                 n.trees =best.iter[x],
+                                                                                                 type="response"))^2)/sum((DaFr[[x]][[2]][, label] - mean(DaFr[[x]][[2]][, label]))^2))
+    rmse_test <- sapply(1:length(case.gbm), function(x) Metrics::rmse(actual = DaFr[[x]][[2]][, label],
+                                                                      predicted = predict(case.gbm[[x]],
+                                                                                          newdata = DaFr[[x]][[2]],
+                                                                                          n.trees = best.iter[x],
+                                                                                          type = "response")))
   }
     df_importance <- do.call(rbind, lapply(case.gbm, function(j) t(as.data.frame(summary(j)$rel.inf[match(vars, summary(j)$var)], optional = T))))
     colnames(df_importance) <- vars
     pd_out <- foreach(i = 1:nruns, .combine = "rbind") %do% {
-    pd_out <- lapply(vars, function(m) dplyr::mutate(plot.gbm(case.gbm[[i]], i.var = m, return.grid = T), variable.name = m, effect = "marginal.effect", bootstrap_run = i))
+    pd_out <- lapply(vars, function(m) dplyr::mutate(plot.gbm(case.gbm[[i]],
+                                                              i.var = m,
+                                                              return.grid = T,
+                                                              type = "response"),
+                                                     variable.name = m,
+                                                     effect = "marginal.effect",
+                                                     bootstrap_run = i))
     pd_out <- do.call(rbind, lapply(pd_out, function(m) {
       colnames(m)[1:2] <- c("x", "yhat")
       m}))
     pd_out}
-    out1 <- cbind.data.frame(eta = eta, max_depth = max_depth, n.minobsinnode = n.minobsinnode, n.trees = best.iter, eval_train = eval_train, eval_test = eval_test, rmse_train = rmse_train, rmse_test = rmse_test, bootstrap_run = 1:nruns, df_importance)
+    out1 <- cbind.data.frame(eta = eta,
+                             max_depth = max_depth,
+                             n.minobsinnode = n.minobsinnode,
+                             n.trees = best.iter,
+                             eval_train = eval_train,
+                             eval_test = eval_test,
+                             rmse_train = rmse_train,
+                             rmse_test = rmse_test,
+                             bootstrap_run = 1:nruns,
+                             df_importance)
     list(out1, pd_out, predictions)
   }
