@@ -7,10 +7,15 @@
 #vars - a vector of the variables of interest. It may be simplest to simply do unique(data$variable.name) to grab all variables
 #type - whether you want the plots to show the mean and 95% confidence interval (as derived from the t-distribution) or mean and all bootstrap results
 #histogram - a logical argument with TRUE meaning that histogram plots are made and overlayed with the partial dependency plots. 
+#cleaned names is an optional argument to give a vector of panel names (in the same order as the variables) that will replace the variable names. 
+#This is more useful for publication purposes
 
 ##example: partial_plot(pd_out, out, vars = levels(out$variable.name), type = "mean")
-partial_plot <- function(data, hist.data, vars, type = c("mean", "all"), histogram = T, ...) {
-  PLT <- lapply(vars, function(vars) {
+partial_plot <- function(data, hist.data, vars, type = c("mean", "all"), histogram = T, cleaned_names = NULL,...) {
+  if(is.null(cleaned_names)) {
+    cleaned_names <- vars
+    }
+    PLT <- lapply(vars, function(vars) {
     BOOT <- data %>%
       filter(variable.name == vars) %$%
       bootstrap_run %>%
@@ -63,7 +68,8 @@ partial_plot <- function(data, hist.data, vars, type = c("mean", "all"), histogr
                         y = mean),
                     color = "black",
                     size = 1.5) +
-          labs(x = vars) +
+          labs(x = NULL,
+               y = NULL) +
           theme(panel.background = element_blank(),
                 panel.border = element_rect(fill = NA,
                                             color = "black",
@@ -88,13 +94,14 @@ partial_plot <- function(data, hist.data, vars, type = c("mean", "all"), histogr
                             y = mean),
                         color = "black",
                         size = 1.5) +
-              labs(x = vars) +
+              labs(x = NULL,
+                   y = NULL) +
               theme(panel.background = element_blank(),
                     panel.border = element_rect(fill = NA,
                                                 color = "black",
                                                 size = 0.8),
                     panel.grid = element_line(color = "transparent"),
-                    axis.title = element_text(face = "bold"))
+                    axis.text = element_text(size = 7))
           }} else {
             data %>%
               filter(variable.name == vars) %>%
@@ -105,13 +112,13 @@ partial_plot <- function(data, hist.data, vars, type = c("mean", "all"), histogr
                             y = yhat),
                         color = "black",
                         size = 1.5) +
-              labs(x = vars) +
+              labs(x = NULL,
+                   y = NULL) +
               theme(panel.background = element_blank(),
                     panel.border = element_rect(fill = NA,
                                                 color = "black",
                                                 size = 0.8),
-                    panel.grid = element_line(color = "transparent"),
-                    axis.title = element_text(face = "bold"))  
+                    panel.grid = element_line(color = "transparent"))  
           }})
   if(isTRUE(histogram)) {
     PLT2 <- lapply(vars, function(vars) {
@@ -123,14 +130,15 @@ partial_plot <- function(data, hist.data, vars, type = c("mean", "all"), histogr
                  color = "black",
                  fill = "grey85") +
         scale_y_continuous(position = "right") +
-        labs(x = vars,
-             y = "Frequency") +
+        labs(x = cleaned_names[i],
+             y = NULL) +
         theme(panel.background = element_blank(),
               panel.border = element_rect(fill = NA,
                                           color = "black",
                                           size = 0.8),
               panel.grid.major = element_line(color = "grey90"),
-              axis.title = element_text(face = "bold"))
+              axis.title = element_text(size = 9),
+              axis.text = element_text(size = 7))
     })
     PLTS <- lapply(1:length(PLT2), function(j) {
       base_g <- ggplot_gtable(ggplot_build(PLT2[[j]]))
@@ -163,4 +171,16 @@ partial_plot <- function(data, hist.data, vars, type = c("mean", "all"), histogr
                                     name = "c")
       final_grob
     })
-    wrap_plots(PLTS)} else wrap_plots(PLT)}
+    LAB1 <- cowplot::ggdraw() +
+    cowplot::draw_label("Marginal Effect on Prediction",
+                        angle = 90,
+                        fontface = "bold",
+                        size = 18)
+    LAB2 <- cowplot::ggdraw() +
+    cowplot::draw_label("Frequency",
+                        angle = 270,
+                        fontface = "bold",
+                        size = 18)
+    cowplot::plot_grid(LAB1, wrap_plots(PLT), LAB2,
+                       nrow = 1,
+                       rel_widths = c(0.1, 1, 0.1))} else wrap_plots(PLT)}
