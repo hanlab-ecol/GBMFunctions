@@ -16,3 +16,6 @@ This function, like spatialGridSearch, is the spatially explicit version of boot
 
 ### partialPlot
 This function creates partial dependency plots similar to Han et al. 2015 (Rodent reservoirs of future diseases). The result from this function is a multipanel plot showing the marginal effect on prediction on the left y-axis (and as the line plot layer) and frequency of the distribution of a trait on the right y-axis (as depicted by the histogram layer and understood by the breaks along the x-axis). It uses the output from an observed data run of the bootstrapGBM function and can be modified to only include variables of interest based on what is given to the vars argument. 
+
+### group.block
+This is a modified version of the group.blocks function from {ENMeval} to allow for groups larger than 4 to be specified. It will start assigning groups to the point furthest from the others. Do note that it is written to provide an equal number of background and presence points in each group, so the groupings may melt into one another (thanks to the background points). Will probably turn this into an argument to allow for discrete groupings. Requires {sp}.
