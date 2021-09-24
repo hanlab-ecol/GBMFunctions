@@ -11,7 +11,7 @@
 #This is more useful for publication purposes
 
 ##example: partial_plot(pd_out, out, vars = levels(out$variable.name), type = "mean", histogram = T)
-partial_plot <- function(data, hist.data, vars, type = c("mean", "all"), histogram = T, cleaned_names = vars,...) {
+partial_plot <- function(data, hist.data, vars, type = c("mean", "all"), histogram = T, cleaned_names = NULL,...) {
   if(is.null(cleaned_names)) {
     cleaned_names <- vars
     }
