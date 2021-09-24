@@ -10,7 +10,7 @@
 #cleaned names is an optional argument to give a vector of panel names (in the same order as the variables) that will replace the variable names. 
 #This is more useful for publication purposes
 
-##example: partial_plot(pd_out, out, vars = levels(out$variable.name), type = "mean")
+##example: partial_plot(pd_out, out, vars = levels(out$variable.name), type = "mean", histogram = T)
 partial_plot <- function(data, hist.data, vars, type = c("mean", "all"), histogram = T, cleaned_names = NULL,...) {
   if(is.null(cleaned_names)) {
     cleaned_names <- vars
@@ -181,6 +181,6 @@ partial_plot <- function(data, hist.data, vars, type = c("mean", "all"), histogr
                         angle = 270,
                         fontface = "bold",
                         size = 18)
-    cowplot::plot_grid(LAB1, wrap_plots(PLT), LAB2,
+    cowplot::plot_grid(LAB1, wrap_plots(PLTS), LAB2,
                        nrow = 1,
                        rel_widths = c(0.1, 1, 0.1))} else wrap_plots(PLT)}
