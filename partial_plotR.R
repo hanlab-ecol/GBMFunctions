@@ -121,9 +121,9 @@ partial_plot <- function(data, hist.data, vars, type = c("mean", "all"), histogr
                     panel.grid = element_line(color = "transparent"))  
           }})
   if(isTRUE(histogram)) {
-    PLT2 <- lapply(vars, function(vars) {
+    PLT2 <- lapply(1:length(vars), function(i) {
       hist.data %>%
-        filter(variable.name == vars) %>%
+        filter(variable.name == vars[i]) %>%
         ggplot(aes(x = variable.value,
                    y = value)) +
         geom_bar(stat = "identity",
