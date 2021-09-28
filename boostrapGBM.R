@@ -13,7 +13,8 @@
 #bootstrap - determines whether to use the observed data or a null distribution for performing the bootstrap
 #method - set at cv
 #cv.folds - number of folds to use with gbm
-#cl - the cluster object to use with parallelization. If you don't wish to use parallel processing, then this argument should be "cl = NULL"
+#cl - default is NULL. This is a numeric vector of length 2 with the first being the number of cores used to run gbm 
+#within clusterApply and the second supplying the n.cores argument for gbm::gbm
 ######
 ##Example
 #packages <- c("gbm", "caret", "Matrix", "pdp", "caTools", "ROCR", "dplyr", "foreach", "dismo", "doSNOW", "parallel")
@@ -23,7 +24,7 @@
 #registerDoSNOW(cl)
 #alt <- bootstrap_gbm(DF, label = "sr", vars = colnames(DF)[-1:-3], eta = 0.001, max_depth = 2, nrounds = 1000, distribution = "gaussian", k = 5, nruns = 5, bootstrap = "observed")
 ######
-bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli", "gaussian", "poisson", "huberized"), eta, max_depth, n.minobsinnode, nrounds, nruns, bootstrap = c("observed", "null"), method = "cv", cv.folds = 5, cl) {
+bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli", "gaussian", "poisson", "huberized"), eta, max_depth, n.minobsinnode, nrounds, nruns, bootstrap = c("observed", "null"), method = "cv", cv.folds = 5, cl = NULL) {
   model<-as.formula(paste(label, "~",
                           paste(vars, collapse = "+"),
                           sep = ""))
@@ -57,8 +58,10 @@ bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli",
           verbose = FALSE)
     })
   } else {
-    clusterExport(cl, list("gbm"))
-    case.gbm <- clusterApply(cl, 1:nruns, function(m) {
+    cores <- makeCluster(cl[1])
+    on.exit(parallel::stopCluster(cores))
+    clusterExport(cores, list("gbm"))
+    case.gbm <- clusterApply(cores, 1:nruns, function(m) {
       gbm(data= DaFr[[m]][[1]],
           model,
           distribution = distribution,
@@ -68,7 +71,8 @@ bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli",
           interaction.depth = max_depth,
           n.minobsinnode = n.minobsinnode,
           bag.fraction = 0.5,
-          verbose = FALSE)
+          verbose = FALSE,
+          n.cores = cl[2])
     })
   }
   best.iter <- sapply(case.gbm, gbm.perf, method = method, plot.it=F) #this gives you the optimal number of trees 
