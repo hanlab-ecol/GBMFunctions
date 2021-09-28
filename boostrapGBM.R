@@ -68,8 +68,7 @@ bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli",
           interaction.depth = max_depth,
           n.minobsinnode = n.minobsinnode,
           bag.fraction = 0.5,
-          verbose = FALSE,
-          n.cores = 1)
+          verbose = FALSE)
     })
   }
   best.iter <- sapply(case.gbm, gbm.perf, method = method, plot.it=F) #this gives you the optimal number of trees 
