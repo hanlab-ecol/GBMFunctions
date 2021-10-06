@@ -19,7 +19,7 @@
 #detectCores()
 #cl <- makeCluster(3, "SOCK")
 #registerDoSNOW(cl)
-#GRID <- gridSearch(TRAIT, label = "above_infection", eta = c(0.0001, 0.005, 0.001), max_depth = c(1, 2, 3, 4), n.minobsinnode = c(2, 5), vars = colnames(TRAIT)[c(8:43)], k_split = 0.8, distribution = "bernoulli", nrounds = 100000, cl = cl)
+#GRID <- gridSearch(TRAIT, label = "above_infection", eta = c(0.0001, 0.005, 0.001), max_depth = c(1, 2, 3, 4), n.minobsinnode = c(2, 5), vars = colnames(TRAIT)[c(8:43)], k_split = 0.8, distribution = "bernoulli", nrounds = 100000, cl = NULL, n_cores = 1)
 ######
 gridSearch <- function(DF, label, vars, k_split, distribution = c("bernoulli", "gaussian", "poisson", "huberized"), eta, max_depth, n.minobsinnode, nrounds, method = "cv", cv.folds = 5, cl) {
   model <- as.formula(paste0(label, "~",
@@ -42,11 +42,14 @@ gridSearch <- function(DF, label, vars, k_split, distribution = c("bernoulli", "
           interaction.depth = m[2],
           n.minobsinnode = m[3],
           bag.fraction = 0.5,
-          verbose = FALSE)
+          verbose = FALSE,
+          n.cores = n_cores)
     })
   } else {
-    clusterExport(cl, list("gbm"))
-    case.gbm <- clusterApply(cl, split(COMBN, row.names(COMBN)), function(m) {
+    cores <- makeCluster(cl[1])
+    on.exit(parallel::stopCluster(cores))
+    clusterExport(cores, list("gbm"))
+    case.gbm <- clusterApply(cores, split(COMBN, row.names(COMBN)), function(m) {
       gbm(data=TRAIN,
           model,
           distribution = distribution,#default
@@ -56,7 +59,8 @@ gridSearch <- function(DF, label, vars, k_split, distribution = c("bernoulli", "
           interaction.depth = m[2],
           n.minobsinnode = m[3],
           bag.fraction = 0.5,
-          verbose = FALSE)
+          verbose = FALSE,
+          n.cores = cl[2])
     })
   }
   best.iter <- sapply(case.gbm, gbm.perf, method = method, plot.it=F) #this gives you the optimal number of trees 
