@@ -55,7 +55,8 @@ bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli",
           interaction.depth = max_depth,
           n.minobsinnode = n.minobsinnode,
           bag.fraction = 0.5,
-          verbose = FALSE)
+          verbose = FALSE,
+          n.cores = 1)
     })
   } else {
     cores <- makeCluster(cl[1])
