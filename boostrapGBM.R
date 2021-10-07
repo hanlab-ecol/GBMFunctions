@@ -13,8 +13,9 @@
 #bootstrap - determines whether to use the observed data or a null distribution for performing the bootstrap
 #method - set at cv
 #cv.folds - number of folds to use with gbm
-#cl - default is NULL. This is a numeric vector of length 2 with the first being the number of cores used to run gbm 
-#within clusterApply and the second supplying the n.cores argument for gbm::gbm
+#cl - default is 1. If the numeric vector is of length 1, then this number is used as the n.cores argument for gbm. 
+##If it is a numeric vector of length 2, the first element is the number of cores used to run gbm 
+##within clusterApply and the second supplying the n.cores argument for gbm::gbm
 ######
 ##Example
 #packages <- c("gbm", "caret", "Matrix", "pdp", "caTools", "ROCR", "dplyr", "foreach", "dismo", "doSNOW", "parallel")
@@ -24,7 +25,7 @@
 #registerDoSNOW(cl)
 #alt <- bootstrap_gbm(DF, label = "sr", vars = colnames(DF)[-1:-3], eta = 0.001, max_depth = 2, nrounds = 1000, distribution = "gaussian", k = 5, nruns = 5, bootstrap = "observed")
 ######
-bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli", "gaussian", "poisson", "huberized"), eta, max_depth, n.minobsinnode, nrounds, nruns, bootstrap = c("observed", "null"), method = "cv", cv.folds = 5, cl = NULL) {
+bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli", "gaussian", "poisson", "huberized"), eta, max_depth, n.minobsinnode, nrounds, nruns, bootstrap = c("observed", "null"), method = "cv", cv.folds = 5, cl = 1) {
   model<-as.formula(paste(label, "~",
                           paste(vars, collapse = "+"),
                           sep = ""))
@@ -44,7 +45,7 @@ bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli",
     }
     list(TRAIN, TEST)
   }
-  if(is.null(cl)) {
+  if(length(cl) == 1) {
     case.gbm <- lapply(1:nruns, function(m) {
       gbm(data= DaFr[[m]][[1]],
           model,
@@ -56,7 +57,7 @@ bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli",
           n.minobsinnode = n.minobsinnode,
           bag.fraction = 0.5,
           verbose = FALSE,
-          n.cores = 1)
+          n.cores = cl)
     })
   } else {
     cores <- makeCluster(cl[1])
