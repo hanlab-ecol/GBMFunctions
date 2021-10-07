@@ -13,9 +13,7 @@
 #bootstrap - determines whether to use the observed data or a null distribution for performing the bootstrap
 #method - set at cv
 #cv.folds - number of folds to use with gbm
-#cl - default is 1. If the numeric vector is of length 1, then this number is used as the n.cores argument for gbm. 
-##If it is a numeric vector of length 2, the first element is the number of cores used to run gbm 
-##within clusterApply and the second supplying the n.cores argument for gbm::gbm
+#cl - default is 1. If the numeric vector is of length 1, then this number is used as the n.cores argument for gbm. If it is a numeric vector of length 2, the first element is the number of cores used to run gbm within clusterApply and the second supplying the n.cores argument for gbm::gbm
 ######
 ##Example
 #packages <- c("gbm", "caret", "Matrix", "pdp", "caTools", "ROCR", "dplyr", "foreach", "dismo", "doSNOW", "parallel")
