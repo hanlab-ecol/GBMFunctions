@@ -19,7 +19,7 @@
 #detectCores()
 #cl <- makeCluster(3, "SOCK")
 #registerDoSNOW(cl)
-#GRID <- gridSearch(TRAIT, label = "above_infection", eta = c(0.0001, 0.005, 0.001), max_depth = c(1, 2, 3, 4), n.minobsinnode = c(2, 5), vars = colnames(TRAIT)[c(8:43)], k_split = 0.8, distribution = "bernoulli", nrounds = 100000, cl = NULL, n_cores = 1)
+#GRID <- gridSearch(TRAIT, label = "above_infection", eta = c(0.0001, 0.005, 0.001), max_depth = c(1, 2, 3, 4), n.minobsinnode = c(2, 5), vars = colnames(TRAIT)[c(8:43)], k_split = 0.8, distribution = "bernoulli", nrounds = 100000, cl = 1)
 ######
 gridSearch <- function(DF, label, vars, k_split, distribution = c("bernoulli", "gaussian", "poisson", "huberized"), eta, max_depth, n.minobsinnode, nrounds, method = "cv", cv.folds = 5, cl) {
   model <- as.formula(paste0(label, "~",
@@ -31,7 +31,7 @@ gridSearch <- function(DF, label, vars, k_split, distribution = c("bernoulli", "
   TRAIN <- DF[DP, ]
   TEST <- DF[-DP, ]
   COMBN <- expand.grid(eta, max_depth, n.minobsinnode)
-  if(is.null(cl)) {
+  if(length(cl) == 1) {
     case.gbm <- lapply(split(COMBN, row.names(COMBN)), function(m) {
       gbm(data=TRAIN,
           model,
@@ -43,7 +43,7 @@ gridSearch <- function(DF, label, vars, k_split, distribution = c("bernoulli", "
           n.minobsinnode = m[3],
           bag.fraction = 0.5,
           verbose = FALSE,
-          n.cores = n_cores)
+          n.cores = cl)
     })
   } else {
     cores <- makeCluster(cl[1])
