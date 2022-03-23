@@ -129,6 +129,7 @@ bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli",
     df_importance <- do.call(rbind, lapply(case.gbm, function(j) t(as.data.frame(summary(j)$rel.inf[match(vars, summary(j)$var)], optional = T))))
     colnames(df_importance) <- vars
     pd_out <- foreach(i = 1:nruns, .combine = "rbind") %do% {
+      if(distribution %in% c("bernoulli", "huberized")) {
     pd_out <- lapply(vars, function(m) dplyr::mutate(plot.gbm(case.gbm[[i]],
                                                               i.var = m,
                                                               return.grid = T,
@@ -136,6 +137,14 @@ bootstrapGBM <- function(DF, label, vars, k_split, distribution = c("bernoulli",
                                                      variable.name = m,
                                                      effect = "marginal.effect",
                                                      bootstrap_run = i))
+                     } else {
+    pd_out <- lapply(vars, function(m) dplyr::mutate(plot.gbm(case.gbm[[i]],
+                                                              i.var = m,
+                                                              return.grid = T),
+                                                     variable.name = m,
+                                                     effect = "marginal.effect",
+                                                     bootstrap_run = i))
+                     }
     pd_out <- do.call(rbind, lapply(pd_out, function(m) {
       colnames(m)[1:2] <- c("x", "yhat")
       m}))
